@@ -1,0 +1,34 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: djproxmox
+      POSTGRES_USER: djproxmox
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-djproxmox_secret_pass}
+    volumes:
+      - djproxmox_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U djproxmox -d djproxmox"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  core:
+    image: melnikovit/dj-proxmox:latest
+    restart: unless-stopped
+    ports:
+      - "${DJPROXMOX_PORT:-8091}:8080"
+    environment:
+      DATABASE_URL: postgres://djproxmox:${POSTGRES_PASSWORD:-djproxmox_secret_pass}@db:5432/djproxmox?sslmode=disable
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
+      JWT_SECRET: ${JWT_SECRET:-change_this_secret_key_in_production}
+      DJPROXMOX_SECRETS_KEY: ${DJPROXMOX_SECRETS_KEY:-change_this_encryption_key_in_production}
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  djproxmox_db_data:
