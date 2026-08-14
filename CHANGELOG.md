@@ -6,6 +6,10 @@
 
 ---
 
+### [dj-proxmox] Версия 183f1ded (2026-08-14 20:29:45 UTC)
+- **Событие**: Сборка и публикация в Docker Hub (`melnikovit/dj-proxmox`)
+- **Изменения**: Релиз 183f1ded: ci: add downstream pipeline trigger for dj-all publishing
+
 ### [0.1.0] - 2026-08-14
 #### Добавлено
 - **Мониторинг**: Полноценный стек мониторинга на базе Prometheus (v2.54.1) и Grafana (v11.2.0) в `docker-compose.yml`.
