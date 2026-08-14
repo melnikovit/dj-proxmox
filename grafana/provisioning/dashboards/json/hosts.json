@@ -1,0 +1,123 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Load average",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "id": 1,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "node_load1{endpoint_name=~\"$endpoint\"}", "legendFormat": "{{endpoint_name}} load1", "refId": "A" },
+        { "expr": "node_load5{endpoint_name=~\"$endpoint\"}", "legendFormat": "{{endpoint_name}} load5", "refId": "B" },
+        { "expr": "node_load15{endpoint_name=~\"$endpoint\"}", "legendFormat": "{{endpoint_name}} load15", "refId": "C" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Filesystem used %",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "id": 2,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "percent", "min": 0, "max": 100 },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "100 - ((node_filesystem_avail_bytes{fstype!~\"tmpfs|overlay\",endpoint_name=~\"$endpoint\"} * 100) / node_filesystem_size_bytes{fstype!~\"tmpfs|overlay\",endpoint_name=~\"$endpoint\"})",
+          "legendFormat": "{{endpoint_name}} {{mountpoint}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Network RX/TX",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 },
+      "id": 3,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "Bps" },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "sum by (endpoint_name) (rate(node_network_receive_bytes_total{device!~\"lo|veth.*|docker.*|br-.*\",endpoint_name=~\"$endpoint\"}[5m]))",
+          "legendFormat": "{{endpoint_name}} rx",
+          "refId": "A"
+        },
+        {
+          "expr": "sum by (endpoint_name) (rate(node_network_transmit_bytes_total{device!~\"lo|veth.*|docker.*|br-.*\",endpoint_name=~\"$endpoint\"}[5m]))",
+          "legendFormat": "{{endpoint_name}} tx",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Memory used",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "id": 4,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "bytes" },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "node_memory_MemTotal_bytes{endpoint_name=~\"$endpoint\"} - node_memory_MemAvailable_bytes{endpoint_name=~\"$endpoint\"}",
+          "legendFormat": "{{endpoint_name}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "CPU busy % (agents) / idle-derived (Local)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "id": 5,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "percent", "min": 0, "max": 100 },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "avg by (endpoint_name) (dj_docker_cpu_busy_percent{endpoint_name=~\"$endpoint\"}) or (100 - (avg by (endpoint_name) (rate(node_cpu_seconds_total{mode=\"idle\",endpoint_name=~\"$endpoint\"}[5m])) * 100))",
+          "legendFormat": "{{endpoint_name}}",
+          "refId": "A"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["dj-proxmox", "host"],
+  "templating": {
+    "list": [
+      {
+        "name": "endpoint",
+        "type": "query",
+        "label": "Сервер",
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "query": "label_values(up{endpoint_name=~\".+\"}, endpoint_name)",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "allValue": ".+",
+        "current": { "selected": true, "text": "All", "value": "$__all" },
+        "sort": 1
+      }
+    ]
+  },
+  "time": { "from": "now-6h", "to": "now" },
+  "timezone": "browser",
+  "title": "dj-proxmox Host",
+  "uid": "dj-proxmox-hosts",
+  "version": 4
+}

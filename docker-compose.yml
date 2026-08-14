@@ -15,6 +15,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 20
+    mem_limit: 256m
 
   core:
     image: melnikovit/dj-proxmox:latest
@@ -23,12 +24,66 @@ services:
       - "${DJPROXMOX_PORT:-8091}:8080"
     environment:
       DATABASE_URL: postgres://djproxmox:${POSTGRES_PASSWORD:-djproxmox_secret_pass}@db:5432/djproxmox?sslmode=disable
+      ADMIN_USER: ${ADMIN_USER:-admin}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
-      JWT_SECRET: ${JWT_SECRET:-change_this_secret_key_in_production}
-      DJPROXMOX_SECRETS_KEY: ${DJPROXMOX_SECRETS_KEY:-change_this_encryption_key_in_production}
+      JWT_SECRET: ${JWT_SECRET:-change_this_jwt_secret_in_production}
+      DJPROXMOX_SECRETS_KEY: ${DJPROXMOX_SECRETS_KEY:-change_this_32b_secrets_key_prod}
+      LISTEN_ADDR: ":8080"
+      STATIC_DIR: /app/web
+      PUBLIC_URL: ${PUBLIC_URL:-http://127.0.0.1:8091}
+      AGENT_DIST_DIR: /opt/dj-proxmox/dist
+      AGENT_VERSION: ${AGENT_VERSION:-0.1.0}
+      GRAFANA_URL: ${GRAFANA_URL:-http://127.0.0.1:3003}
+      PROMETHEUS_URL: ${PROMETHEUS_URL:-http://127.0.0.1:9093}
+      PROMETHEUS_SD_DIR: /etc/prometheus/file_sd
+      PROMETHEUS_RELOAD_URL: http://prometheus:9090/-/reload
+      PROMETHEUS_CORE_SCRAPE: core:8080
+    volumes:
+      - ./prometheus/file_sd:/etc/prometheus/file_sd
     depends_on:
       db:
         condition: service_healthy
+      prometheus:
+        condition: service_started
+    mem_limit: 512m
+
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=15d
+      - --web.enable-lifecycle
+    ports:
+      - "${PROMETHEUS_PORT:-9093}:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/rules:/etc/prometheus/rules:ro
+      - ./prometheus/file_sd:/etc/prometheus/file_sd
+      - djproxmox_prometheus_data:/prometheus
+    mem_limit: 512m
+
+  grafana:
+    image: grafana/grafana:11.3.0
+    restart: unless-stopped
+    ports:
+      - "${GRAFANA_PORT:-3003}:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin123}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_USERS_DEFAULT_THEME: light
+      GF_SERVER_ROOT_URL: ${GRAFANA_ROOT_URL:-http://127.0.0.1:3003}
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/provisioning/dashboards/json/overview.json
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - djproxmox_grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    mem_limit: 256m
 
 volumes:
   djproxmox_db_data:
+  djproxmox_prometheus_data:
+  djproxmox_grafana_data:

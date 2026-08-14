@@ -1,0 +1,221 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "type": "table",
+      "title": "Серверы (endpoints)",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 0 },
+      "id": 20,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "max by (endpoint_name, endpoint_type, instance, job) (up{endpoint_name=~\".+\"})",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "transformations": [
+        { "id": "labelsToFields", "options": {} },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": { "Time": true, "__name__": true },
+            "renameByName": {
+              "endpoint_name": "Сервер",
+              "endpoint_type": "Тип",
+              "instance": "Target",
+              "job": "Job",
+              "Value": "UP"
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "1": { "text": "UP", "color": "green" }, "0": { "text": "DOWN", "color": "red" } } }
+          ],
+          "custom": { "align": "auto" }
+        },
+        "overrides": []
+      },
+      "options": { "showHeader": true }
+    },
+    {
+      "type": "stat",
+      "title": "Выбранный endpoint up",
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 8 },
+      "id": 1,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "max(up{endpoint_name=~\"$endpoint\"})", "refId": "A" }],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "1": { "text": "UP", "color": "green" }, "0": { "text": "DOWN", "color": "red" } } }
+          ]
+        },
+        "overrides": []
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" }
+    },
+    {
+      "type": "stat",
+      "title": "Контейнеры (running)",
+      "gridPos": { "h": 4, "w": 5, "x": 4, "y": 8 },
+      "id": 4,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "sum(dj_docker_containers_running{endpoint_name=~\"$endpoint\"}) or count(container_last_seen{name!=\"\",endpoint_name=~\"$endpoint\"}) or count(container_last_seen{name!=\"\"})",
+          "refId": "A"
+        }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" }
+    },
+    {
+      "type": "stat",
+      "title": "Контейнеры (всего)",
+      "gridPos": { "h": 4, "w": 5, "x": 9, "y": 8 },
+      "id": 9,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "sum(dj_docker_containers{endpoint_name=~\"$endpoint\"})",
+          "refId": "A"
+        }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" }
+    },
+    {
+      "type": "stat",
+      "title": "Агенты online",
+      "gridPos": { "h": 4, "w": 5, "x": 14, "y": 8 },
+      "id": 10,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "count(up{job=\"dj-proxmox-agents\"} == 1) or vector(0)",
+          "refId": "A"
+        }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" }
+    },
+    {
+      "type": "stat",
+      "title": "Агенты total",
+      "gridPos": { "h": 4, "w": 5, "x": 19, "y": 8 },
+      "id": 11,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "count(up{job=\"dj-proxmox-agents\"}) or vector(0)",
+          "refId": "A"
+        }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" }
+    },
+    {
+      "type": "timeseries",
+      "title": "Host CPU %",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "id": 5,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "percent", "min": 0, "max": 100 },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "avg by (endpoint_name) (dj_docker_cpu_busy_percent{endpoint_name=~\"$endpoint\"}) or (100 - (avg by (endpoint_name) (rate(node_cpu_seconds_total{mode=\"idle\",endpoint_name=~\"$endpoint\"}[5m])) * 100))",
+          "legendFormat": "{{endpoint_name}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Host Memory",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "id": 6,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "bytes" },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "node_memory_MemTotal_bytes{endpoint_name=~\"$endpoint\"} - node_memory_MemAvailable_bytes{endpoint_name=~\"$endpoint\"}",
+          "legendFormat": "{{endpoint_name}} used",
+          "refId": "A"
+        },
+        {
+          "expr": "node_memory_MemTotal_bytes{endpoint_name=~\"$endpoint\"}",
+          "legendFormat": "{{endpoint_name}} total",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Container CPU (top, Local cadvisor)",
+      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 20 },
+      "id": 7,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "topk(10, sum(rate(container_cpu_usage_seconds_total{name!=\"\",endpoint_name=~\"$endpoint\"}[5m])) by (name, endpoint_name))",
+          "legendFormat": "{{endpoint_name}} {{name}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Container Memory (top, Local cadvisor)",
+      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 20 },
+      "id": 8,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "bytes" },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "topk(10, sum(container_memory_working_set_bytes{name!=\"\",endpoint_name=~\"$endpoint\"}) by (name, endpoint_name))",
+          "legendFormat": "{{endpoint_name}} {{name}}",
+          "refId": "A"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["dj-proxmox"],
+  "templating": {
+    "list": [
+      {
+        "name": "endpoint",
+        "type": "query",
+        "label": "Сервер",
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "query": "label_values(up{endpoint_name=~\".+\"}, endpoint_name)",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "allValue": ".+",
+        "current": { "selected": true, "text": "All", "value": "$__all" },
+        "sort": 1
+      }
+    ]
+  },
+  "time": { "from": "now-1h", "to": "now" },
+  "timezone": "browser",
+  "title": "dj-proxmox Overview",
+  "uid": "dj-proxmox-overview",
+  "version": 3
+}

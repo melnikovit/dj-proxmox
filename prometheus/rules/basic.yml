@@ -1,0 +1,17 @@
+groups:
+  - name: dj-proxmox-basic
+    rules:
+      - alert: InstanceDown
+        expr: up == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Target down"
+      - alert: HighContainerCount
+        expr: count(container_last_seen{name!=""}) > 200
+        for: 10m
+        labels:
+          severity: info
+        annotations:
+          summary: "Many containers observed"
