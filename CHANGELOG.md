@@ -6,9 +6,9 @@
 
 ---
 
-### [dj-proxmox] Версия 183f1ded (2026-08-14 20:29:45 UTC)
+### [dj-proxmox] Версия 13db0495 (2026-08-14 23:37:38 UTC)
 - **Событие**: Сборка и публикация в Docker Hub (`melnikovit/dj-proxmox`)
-- **Изменения**: Релиз 183f1ded: ci: add downstream pipeline trigger for dj-all publishing
+- **Изменения**: Релиз 13db0495: feat: add RBAC, 2FA, quotas, maintenance mode, SDN/Ceph tools and documentation
 
 ### [0.1.0] - 2026-08-14
 #### Добавлено
