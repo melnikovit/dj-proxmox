@@ -6,9 +6,9 @@
 
 ---
 
-### [dj-proxmox] Версия a7c9e2ab (2026-08-15 00:17:34 UTC)
+### [dj-proxmox] Версия 1a980dce (2026-08-15 00:51:15 UTC)
 - **Событие**: Сборка и публикация в Docker Hub (`melnikovit/dj-proxmox`)
-- **Изменения**: Релиз a7c9e2ab: feat: 0.2.0 cache/2FA/alerts and shell UX with monitoring dashboards
+- **Изменения**: Релиз 1a980dce: style: polish sidebar nav with icons and clearer hierarchy
 
 ### [0.1.0] - 2026-08-14
 #### Добавлено
