@@ -6,9 +6,9 @@
 
 ---
 
-### [dj-proxmox] Версия 13db0495 (2026-08-14 23:37:38 UTC)
+### [dj-proxmox] Версия a7c9e2ab (2026-08-15 00:17:34 UTC)
 - **Событие**: Сборка и публикация в Docker Hub (`melnikovit/dj-proxmox`)
-- **Изменения**: Релиз 13db0495: feat: add RBAC, 2FA, quotas, maintenance mode, SDN/Ceph tools and documentation
+- **Изменения**: Релиз a7c9e2ab: feat: 0.2.0 cache/2FA/alerts and shell UX with monitoring dashboards
 
 ### [0.1.0] - 2026-08-14
 #### Добавлено
